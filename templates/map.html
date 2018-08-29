@@ -1,0 +1,148 @@
+{% load staticfiles %}
+<div class='map-container use-all-space'>
+        <div id='map' class='use-all-space'></div>
+</div>
+<script>
+    (function(tomtom, document) {
+        // Define your product name and version
+        tomtom.setProductInfo('Mykaarma bitbattle', '1.0');
+        // Setting TomTom keys
+        tomtom.searchKey('4WBYoHyKGojPX9l5suGVHJ2oXDvbEbYb');
+
+        // Creating map
+        var map = tomtom.L.map('map', {
+            key: '4WBYoHyKGojPX9l5suGVHJ2oXDvbEbYb',
+            source: 'vector',
+            basePath: "https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk"
+        });
+
+
+        var markerOptions1 = {
+            icon: tomtom.L.svgIcon({
+            icon: {
+                icon: 'fas fa-car-side',
+                iconSize: [32, 37],
+                iconAnchor: [16, 2],
+                style: {
+                    color: '#fff'
+                },
+                noPlainSVG: true
+            }
+            })
+        }
+        {% if search_query_lat %}
+            var markerOptions = {
+                title: 'Search Center\nLatitude: ' + {{ search_query_lat }} + '\nLongitude: ' + {{ search_query_lng }},
+                icon: tomtom.L.icon({
+                    iconUrl: 'https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk/../img/center_marker.svg',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                })
+            };
+            var m = tomtom.L.marker([{{ search_query_lat }}, {{ search_query_lng }}], markerOptions).addTo(map);
+            map.setView([{{ search_query_lat }}, {{ search_query_lng }}], 8);
+        {% endif %}
+        {% for obj in car_obj_list %}
+        var marker = tomtom.L.marker([{{obj.car_dealer.latitude}}, {{obj.car_dealer.longitude}}], markerOptions1).addTo(map);
+        marker.bindPopup('{{obj.car_dealer.name}}, \nRating: {{obj.car_dealer.rating}} ({{obj.car_dealer.num_ratings}})');
+        {% endfor %}        
+
+        var controlPanel = tomtom.controlPanel({
+            position: 'bottomright',
+            title: 'Settings',
+            collapsed: true
+        }).addTo(map);
+
+        var unitSelector = tomtom.unitSelector.getHtmlElement(tomtom.globalUnitService);
+        var languageSelector = tomtom.languageSelector.getHtmlElement(tomtom.globalLocaleService, 'search');
+
+        var unitRow = document.createElement('div');
+        var unitLabel = document.createElement('label');
+        unitLabel.innerHTML = 'Unit of measurement';
+        unitLabel.appendChild(unitSelector);
+        unitRow.appendChild(unitLabel);
+        unitRow.className = 'input-container';
+
+        var langRow = document.createElement('div');
+        var langLabel = document.createElement('label');
+        langLabel.innerHTML = 'Search language';
+        langLabel.appendChild(languageSelector);
+        langRow.appendChild(langLabel);
+        langRow.className = 'input-container';
+
+        controlPanel.addContent(unitRow);
+        controlPanel.addContent(langRow);
+
+        // Relocating zoom buttons
+        map.zoomControl.setPosition('bottomleft');
+
+        // Search input field
+        var searchBoxInstance = tomtom.searchBox({
+            position: 'topright',
+            language: 'en-GB', // optional
+            imperialDistance: unitSelector.value === 'imperial', // FALSE by default
+            serviceOptions: {unwrapBbox: true}
+        }).addTo(map);
+
+        // Marker layer to indicate the center of the search
+        var searchCenterLayer = tomtom.markersView()
+            .addTo(map);
+
+        // Marker layer to display the results over the map
+        var markersLayer = L.tomTomMarkersLayer().addTo(map);
+
+        // Draw markers for all the results found by the searchBox control (before user selects one)
+        searchBoxInstance.on(searchBoxInstance.Events.ResultsFound, function(results) {
+
+            drawSearchCenter();
+            markersLayer.setMarkersData(results.data)
+                .addMarkers();
+        });
+
+        // Draw markers for all the results found by the searchBox control (before user selects one)
+        searchBoxInstance.on(searchBoxInstance.Events.ResultsCleared, function() {
+            markersLayer.clearLayers();
+        });
+
+        // Add a marker to indicate the position of the result selected by the user
+        searchBoxInstance.on(searchBoxInstance.Events.ResultClicked, function(result) {
+            markersLayer.setMarkersData([result.data])
+                .addMarkers();
+            
+            // Update hidden field values (required for sending searched location to server)
+            document.getElementById("loc_lat").value = result.data.position.lat;
+            document.getElementById("loc_lng").value = result.data.position.lon;
+            document.getElementById("loc_name").value = result.data.address.freeformAddress;
+            document.getElementById("location").innerHTML = result.data.address.freeformAddress;
+
+            // alert(result.data)
+            console.log(result.data);
+
+            var viewport = result.data.viewport;
+            if (viewport) {
+                map.fitBounds([viewport.topLeftPoint, viewport.btmRightPoint]);
+            } else {
+                map.fitBounds(markersLayer.getBounds());
+            }
+        });
+
+        // Draw a marker at the center of the map
+        function drawSearchCenter() {
+            var currentLocation = map.getCenter();
+            var markerOptions = {
+                title: 'Search Center\nLatitude: ' + currentLocation.lat + '\nLongitude: ' + currentLocation.lng,
+                icon: tomtom.L.icon({
+                    iconUrl: 'https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk/../img/center_marker.svg',
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                })
+            };
+
+
+            searchCenterLayer.clearLayers();
+            searchCenterLayer.addLayer(
+                tomtom.L.marker([currentLocation.lat, currentLocation.lng], markerOptions)
+            ).addTo(map);
+        }
+    })(tomtom, document);
+</script>

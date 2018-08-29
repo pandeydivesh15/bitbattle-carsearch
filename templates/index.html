@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block navbar %}
+	{% if user %}
+		{% include "navbar_after_login.html" %}
+	{% else %}
+		{% include "navbar_before_login.html" %}
+	{% endif %}
+
+{% endblock navbar %}
+
+{% block content %}
+	<div class="container">
+	{% if user %}
+
+		<div class="map_region use-all-space">{% include "map.html" %}</div>
+		<br>
+		<div class="row">
+		<div class="col-lg-4">
+			<div class="panel panel-default">
+				
+				<div class="panel-heading" style="color: white"><b>Welcome to 
+				<span style="font-size: 20px">my<span style="color: #FF7A00; font-size: 25px">Kaar</span>Finder</span></b></div>				
+				<div class="panel-body">
+					<li>Choose your location/address on the map</li>
+					<li>Select your search filters</li>
+					<li>Analyze search results</li>
+					<li>Get more details about specific car</li>
+				</div>
+			</div>
+			<div class="panel panel-default">
+				<div class="panel-heading" data-toggle="collapse" data-target="#collapse" style="color: white;"><b>Past Searches</b> <span style="color: black; font-size: 10px">(Click to collapse)</span></button></div>
+				
+								
+				<div id="collapse" class="panel-body collapse in" style="background: white; max-height: 800px;overflow-y: scroll;">
+				{% for obj in past_searches %}
+				 	<a href="{{obj.get_absolute_URL}}" style="color: black; background: ">
+				 	<div class="panel panel-info">
+						<div class="panel-heading" style="background: url();"><b>{{obj.location_name}}</b><br><span>{{obj.timestamp|timesince}} ago</span></div>
+						<div class="panel-body">
+							<div class="col-lg-6">Car Make searched: <b>{{obj.car_make}}</b></div>
+							<div class="col-lg-6">Max distance searched: <b>{{obj.max_distance}}</b></div>							
+						</div>
+					</div>
+					</a>
+				{% endfor %}	
+				</div>
+			</div>
+			
+		</div>
+		<div class="col-lg-8">
+			<div class="panel panel-default">
+				
+				<!-- <div class="panel-heading" style="color: white;"><b>Past Searches</b></div>				 -->
+				<div class="panel-body">
+				<h3>Selected location: <span class="label label-default" id="location">{{search_query_name}}</span></h3>
+				<form role="form" action="/" method="post">{% csrf_token %}
+					<div class="form-group">
+						<input class="form-control" id="loc_lat" type="hidden" name="loc_latitude" value="{% if search_query_lat %}{{search_query_lat}}{% endif %}">
+						<input class="form-control" id="loc_lng" type="hidden" name="loc_longitude" value="{% if search_query_lng %}{{search_query_lng}}{% endif %}">
+						<input class="form-control" id="loc_name" type="hidden" name="location_name" value="{{search_query_name}}">
+					</div>
+					<div class="row">
+					<div class="col-lg-6">
+						<div class="form-group" >
+						<span class="input-group-addon">Car Make</span>
+						<select class="form-control" name="car_make">
+						{% for obj in all_makes %}
+						  <option {% if obj == search_query_car_make %}selected{% endif %}>{{ obj }}</option>
+						{% endfor %}
+						</select>
+						<!-- <input class="form-control" type="number" name="max_distance" required="True" placeholder="Max distance to search (in km)"> -->
+						</div>
+					</div>
+					<div class="col-lg-6">
+					<div class="form-group" >
+						<span class="input-group-addon">Max distance to search (in km)</span>
+						<input class="form-control" type="number" name="max_distance" value="{% if search_query_max_dist %}{{search_query_max_dist}}{% endif %}" placeholder="Max distance to search (in km)">
+					</div>
+					</div>
+					</div>
+					<div class="row">
+					<div class="col-md-3">
+						<div class="form-group" >
+						<span >Sort results by:</span>
+						<div class="form-check">
+						  <input class="form-check-input" type="radio" name="sort_by" id="exampleRadios1" value="price" {% if search_query_sort_by == 'price' %}checked{% endif %}>
+						  <label class="form-check-label" for="exampleRadios1">
+						    Price
+						  </label>
+						</div>
+						<div class="form-check">
+						  <input class="form-check-input" type="radio" name="sort_by" id="exampleRadios2" value="rating" {% if search_query_sort_by == 'rating' %}checked{% endif %}>
+						  <label class="form-check-label" for="exampleRadios2">
+						    Avg Dealer Rating
+						  </label>
+						</div>
+						<div class="form-check">
+						  <input class="form-check-input" type="radio" name="sort_by" id="exampleRadios3" value="">
+						  <label class="form-check-label" for="exampleRadios3">
+						    No Choice
+						  </label>
+						</div>
+						<!-- <input class="form-control" type="number" name="max_distance" required="True" placeholder="Max distance to search (in km)"> -->
+						</div>
+					</div>
+					<div class="col-md-4">
+					<div class="form-group" >
+						<span>Maximum Price (INR)</span>
+						<input class="form-control" step="10000" type="number" name="max_price" value="{% if search_query_max_price %}{{search_query_max_price}}{% endif %}" placeholder="">
+						<span>Minimum Dealer Rating (1-5)</span>
+						<input class="form-control" step="0.5" type="number" name="min_rating" value="{% if search_query_min_rating %}{{search_query_min_rating}}{% endif %}"  placeholder="">
+					</div>
+					</div>
+					<div class="col-md-4">
+					<div class="form-group" >
+						<span>Color Preference:</span>
+						<select class="form-control" name="car_color">
+						<option selected>No Choice</option>
+						{% for obj in all_colors %}
+						  <option {% if search_query_car_color == obj %}selected{% endif %}>{{ obj }}</option>
+						{% endfor %}
+						</select>
+						<span>Car Transmission:</span>
+						<select class="form-control" name="car_trans">
+						<option selected>No Choice</option>
+						{% for obj in all_transmissions %}
+						  <option {% if search_query_car_trans == obj %}selected{% endif %}>{{ obj }}</option>
+						{% endfor %}
+						</select>
+					</div>
+					</div>
+					</div>
+					
+					<div class="buttonAlign">
+						<button type="submit" class="btn btn-primary btn-lg btn-block">Start searching</button>
+					</div>
+				</form>	
+					
+				</div>
+			</div>
+			{% if car_obj_list %}
+			<div class="panel panel-default">
+			<div class="panel-heading" align='center' style="color: white;"><b>Search Results</b></div><br>
+			<div class="row" align="center">
+			<div class="col-lg-1"></div>
+				{% for obj in car_obj_list %}
+					<div class="col-lg-5">
+					<div class="panel panel-default">
+						<div class="panel-heading" ><b>{{obj.car_model}} | {{obj.year}} | {{obj.make}}</b></div>
+						<div class="panel-body">
+							Car Price: &#x20b9; {{obj.price}}<br>
+							Dealer: {{obj.car_dealer.name}}<br>
+							Dealer Rating: {{obj.car_dealer.rating}} ({{obj.car_dealer.num_ratings}} ratings)<br>
+							<a href="{{obj.get_absolute_URL}}" style="color: grey; " target="_blank">Get more details</a>
+
+						</div>
+					</div>
+					</div>
+					{% cycle "" "</div><hr><div class='row' align='center'><div class='col-lg-1'></div>" %}
+				{% endfor %}
+			</div>
+			</div>
+			{% else %}
+				{% if search_query_lat %}
+				<div class="panel panel-default">
+					<div class="panel-body">
+					No results to show. Please try again.
+					</div>
+				</div>		
+				{% else %}
+					
+				{% endif %}
+							
+			{% endif %}
+			
+		</div>
+		</div>
+		
+	{% else %}
+		<div class="jumbotron">
+		<h1>Welcome to <span >my<span style="color: #FF7A00;">Kaar</span>Finder</span></h1>
+		<p>A web portal to find awesome cars in your neighbourhood.
+		<ul>
+		    <li>First step, register. It helps us to serve you better.</li>
+		    <li>Search for specific cars and get car results from the nearby dealers.</li>
+		    <li>Analyze results, get more car details, send queries.</li>
+		</ul>
+		</p>
+		<p><a class="btn btn-primary btn-lg" href="/signup" role="button">Register</a></p>
+		</div>
+	{% endif %}
+
+	
+	<!-- <h1 class="heading">P O S T S</h1> -->
+	
+	
+
+	</div>
+	
+{% endblock content %}
+{% block afterbody %}
+	<br>
+	{% if user %}
+		<footer class="footer">
+		<br>
+	      <div class="container">
+	        <p class="text-muted" align="center"><a href="#top"><span class="glyphicon glyphicon-arrow-up"></span> Back to Top</a></p>
+	        <p class="text-muted" align="center"><a href="/"><span class="glyphicon glyphicon-home"></span> Home</a></p>
+	      </div>
+	    </footer>
+	{% else %}
+		
+	{% endif %}
+	
+	{% endblock afterbody %}

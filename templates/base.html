@@ -1,0 +1,41 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>myKaarFinder</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
+	{% block add_static %}
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+ 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+ 	
+ 	<link rel='stylesheet' type='text/css' href="https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk/map.css"/>
+    <link rel='stylesheet' type='text/css' href='https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk/../elements.css' />
+    <script type='text/javascript' src='https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk/../js/form.js'></script>
+    <script type='text/javascript' src="https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk/tomtom.min.js"></script>
+
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/all.css" integrity="sha384-hWVjflwFxL6sNzntih27bfxkr27PmbbK/iSvJ+a4+0owXq79v+lsFkW54bOGbiDQ" crossorigin="anonymous">
+    
+ 	<link rel="stylesheet" href="{% static 'css/style.css' %}" type="text/css"/>
+ 	{% endblock add_static %}
+</head>
+<body>
+	{% block navbar %}
+			{% include "navbar_before_login.html" %}
+	{% endblock navbar %}
+
+	{% include "messages_display.html" %}
+	
+
+	{% block content %}
+	
+	{% endblock content %}
+
+    {% block afterbody %}
+	
+	{% endblock afterbody %}
+	
+</body>
+</html>

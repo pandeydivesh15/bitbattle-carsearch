@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% block navbar %}
+	{% if user %}
+		{% include "navbar_after_login.html" %}
+	{% else %}
+		{% include "navbar_before_login.html" %}
+	{% endif %}
+
+{% endblock navbar %}
+{% block content %}
+	<div class="container">
+	<div class="map_region use-all-space">
+		<div class='map-container use-all-space'>
+        	<div id='map' class='use-all-space'></div>
+		</div>
+		<br>
+		<script>
+			tomtom.setProductInfo('Mykaarma bitbattle', '1.0');
+			var markerOptions = {
+	            icon: tomtom.L.svgIcon({
+	            icon: {
+	                icon: 'fas fa-car-side',
+	                iconSize: [32, 37],
+	                iconAnchor: [16, 2],
+	                style: {
+	                    color: '#fff'
+	                },
+	                noPlainSVG: true
+	            }
+	            })
+	        }
+			var map = tomtom.map('map', {
+			    key: '4WBYoHyKGojPX9l5suGVHJ2oXDvbEbYb',
+			    source: 'vector',
+			    basePath: 'https://api.tomtom.com/maps-sdk-js/4.33.0/examples/sdk'
+			});
+			var marker = tomtom.L.marker([{{obj.car_dealer.latitude}}, {{obj.car_dealer.longitude}}], markerOptions).addTo(map);
+			map.setView([{{obj.car_dealer.latitude}}, {{obj.car_dealer.longitude}}], 9);
+			marker.bindPopup('{{obj.car_dealer.name}}, \nRating: {{obj.car_dealer.rating}} ({{obj.car_dealer.num_ratings}})');
+		</script>
+	</div>
+	<div class="row" align="center">
+		<!-- <div class="col-lg-2"></div> -->
+		<div class="col-lg-12">
+			<div class="panel panel-default post">
+				<div class="panel-heading" style="font-size: 250%"><b>{{obj.car_model}} | {{obj.year}} | {{obj.make}}</b></div>
+				
+				<div class="panel-body">
+					
+						<h3>Car Engine: <b>{{ obj.engine }}</b></h3>
+						<h3>Car Trim: <b>{{ obj.trim }}</b></h3>
+						<h3>Body Specs: <b>{{ obj.body }}</b></h3>
+						<br>
+						<h3>Car Color: <b>{{ obj.color }}</b></h3>
+						<h3>Transmission type: <b>{{ obj.transmission }}</b></h3>
+						<br>
+						<h3>Price: <b>&#x20b9; <span id="inr_price"></span></b></h3>
+						<script>
+							var x={{ obj.price }};
+							x = x.toString();
+							var lastThree = x.substring(x.length-3);
+							var otherNumbers = x.substring(0,x.length-3);
+							if(otherNumbers != '')
+							    lastThree = ',' + lastThree;
+							var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree;
+							document.getElementById("inr_price").innerHTML = res;
+						</script>
+						<br>
+						<h3 align="left"><i>Dealer Details:</i></h3>
+						<h3 align="left">Name: <b>{{ obj.car_dealer.name }}</b></h3>
+						<h3 align="left">Email: <b>{{ obj.car_dealer.email }}</b></h3>
+						<h3 align="left">Rating: <b>{{ obj.car_dealer.rating }}</b> ({{ obj.car_dealer.num_ratings }} ratings)</h3>
+
+						<p align="justify">{{ post_obj.description}}</p>						
+					
+				</div>
+				
+			</div>
+		</div>
+		</div>
+	</div>
+	<div class="container">
+		<div class="row">
+		<div class="col-lg-3"></div>
+		<div class="col-lg-6">
+			<h2 align="center">Send a Query</h2>
+			<form role="form" action="./" method="post">{% csrf_token %}
+					<div class="form-group">
+					  <label for="usr">Name:</label>
+					  <input type="text" class="form-control" name="email" required="True" value={{user.email}}>
+					</div>
+					<div class="form-group">
+					  <label for="comment">Message:</label>
+					  <textarea class="form-control" rows="3" name="message"></textarea>
+					</div>
+					<div class="form-group" >
+						<label for="usr">Name:</label>
+						<input class="form-control " type="number" name="contact" required="True" value={{user.contact}}>
+					</div>
+					<div class="buttonAlign">
+						<button type="submit" class="btn btn-primary btn-lg btn-block">Submit Query</button>
+					</div>
+				</form>
+		</div>
+		</div>
+		
+		<br>
+		<h2>Site Recommendations</h2>
+		<div class="panel panel-default post">
+				<div class="panel-heading">Similar Cars with same <b>Make, Model, Engine</b></div>
+					
+					<div class="carousel slide" id="myCarousel2" data-interval="false">
+			        <div class="carousel-inner">
+			        <div class="item active">
+			        <ul class="thumbnails">
+			        {% for obj in same_make_model_cars %}
+						<div class="col-lg-3">
+								<div class="caption">
+									<h4>{{obj.car_model}} | {{obj.year}} | {{obj.make}}</h4>
+									Car Price: &#x20b9; {{obj.price}}<br>
+										Dealer: {{obj.car_dealer.name}}<br>
+										Dealer Rating: {{obj.car_dealer.rating}} ({{obj.car_dealer.num_ratings}} ratings)<br>
+									<a class="btn btn-mini" target="_blank" href="{{obj.get_absolute_URL}}">Get more details</a>
+								</div>
+			            </div>
+					{% cycle "" "" "" "</ul></div><div class='item'><ul class='thumbnails'>" %}	 	
+					{% endfor %}
+					</ul></div>
+					</div>
+			       
+			        <nav>
+						<ul class="control-box pager">
+							<li><a data-slide="prev" href="#myCarousel2" style="color:black;"><i class="glyphicon glyphicon-chevron-left"></i></a></li>
+							<li><a data-slide="next" href="#myCarousel2" style="color:black;"><i class="glyphicon glyphicon-chevron-right"></i></a></li>
+						</ul>
+					</nav>
+				   <!-- /.control-box -->   
+			                              
+			    	</div>
+		</div>
+		<div class="panel panel-default post">
+				<div class="panel-heading">Similar Cars by the <b>same Dealer</b></div>
+					
+					<div class="carousel slide" id="myCarousel1" data-interval="false">
+			        <div class="carousel-inner">
+			        <div class="item active">
+			        <ul class="thumbnails">
+			        {% for obj in same_dealer_cars %}
+						<div class="col-sm-3">
+							
+								<div class="caption">
+									<h4>{{obj.car_model}} | {{obj.year}} | {{obj.make}}</h4>
+									Car Price: &#x20b9; {{obj.price}}<br>
+										Dealer: {{obj.car_dealer.name}}<br>
+									<a class="btn btn-mini" target="_blank" href="{{obj.get_absolute_URL}}">Get more details</a>
+								</div>
+			                
+			            </div>
+
+					{% cycle "" "" "" "</ul></div><div class='item'><ul class='thumbnails'>" %}	 	
+					{% endfor %}
+					</ul></div>
+					</div>
+			       <hr>
+			        <nav>
+						<ul class="control-box pager">
+							<li><a data-slide="prev" href="#myCarousel1" style="color:black;"><i class="glyphicon glyphicon-chevron-left"></i></a></li>
+							<li><a data-slide="next" href="#myCarousel1" style="color:black;"><i class="glyphicon glyphicon-chevron-right"></i></a></li>
+						</ul>
+					</nav>
+				   <!-- /.control-box -->   
+			                              
+			    	</div>
+		</div>
+		<div class="panel panel-default post">
+				<div class="panel-heading">Similar Cars <b>(Different Dealers)</b></div>
+					<div class="carousel slide" id="myCarousel3" data-interval="false">
+			        <div class="carousel-inner">
+			        <div class="item active">
+			        <ul class="thumbnails">
+			        {% for obj in diff_dealer_cars %}
+						<div class="col-sm-3">
+								<div class="caption">
+									<h4>{{obj.car_model}} | {{obj.year}} | {{obj.make}}</h4>
+									Car Price: &#x20b9; {{obj.price}}<br>
+										Dealer: {{obj.car_dealer.name}}<br>
+										Dealer Rating: {{obj.car_dealer.rating}} ({{obj.car_dealer.num_ratings}} ratings)<br>
+									<a class="btn btn-mini" target="_blank" href="{{obj.get_absolute_URL}}">Get more details</a>
+								</div>
+			            </div>
+
+					{% cycle "" "" "" "</ul></div><div class='item'><ul class='thumbnails'>" %}	 	
+					{% endfor %}
+					</ul></div>
+					</div>
+			       
+			        <nav>
+						<ul class="control-box pager">
+							<li><a data-slide="prev" href="#myCarousel3" style="color:black;"><i class="glyphicon glyphicon-chevron-left"></i></a></li>
+							<li><a data-slide="next" href="#myCarousel3" style="color:black;"><i class="glyphicon glyphicon-chevron-right"></i></a></li>
+						</ul>
+					</nav>
+				   <!-- /.control-box -->   
+			                              
+			    	</div>
+		</div>
+		
+	</div>	
+{% endblock content %}
+{% block afterbody %}
+	<br>
+	{% if user %}
+		<footer class="footer">
+		<br>
+	      <div class="container">
+	        <p class="text-muted" align="center"><a href="#top"><span class="glyphicon glyphicon-arrow-up"></span> Back to Top</a></p>
+	        <p class="text-muted" align="center"><a href="/"><span class="glyphicon glyphicon-home"></span> Home</a></p>
+	      </div>
+	    </footer>
+	{% else %}
+		
+	{% endif %}
+	
+{% endblock afterbody %}
+
+
+
